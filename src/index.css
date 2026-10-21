@@ -1,0 +1,151 @@
+@font-face {
+  font-family: 'Khmer OS Moul Light';
+  src: local('Khmer OS Moul Light'),
+       local('KhmerOSmuollight'),
+       local('Khmer OS Muol Light'),
+       url('/fonts/KhmerOSmuollight.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --gold-foil: linear-gradient(135deg, #7a5214 0%, #e8c86d 40%, #9e6f1f 70%, #69430c 100%);
+  }
+
+  html {
+    scroll-behavior: smooth;
+    font-family: 'Kantumruy Pro', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  }
+
+  /* Khmer text protection: never break words incorrectly or truncate diacritics */
+  [lang="km"] {
+    line-height: 1.85;
+    letter-spacing: normal !important;
+  }
+}
+
+/* Custom Luxury Gold Foil Text (High Contrast & Sharp Definition) */
+.text-gold-gradient {
+  background: linear-gradient(135deg, #7a5214 0%, #e8c86d 35%, #9e6f1f 65%, #69430c 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  display: inline-block;
+  padding-top: 0.3em;
+  padding-bottom: 0.25em;
+  line-height: 1.6;
+  filter: drop-shadow(0 1px 1.5px rgba(92, 57, 10, 0.35));
+  -webkit-text-stroke: 0.3px rgba(115, 75, 15, 0.3);
+}
+
+.text-gold-shimmer {
+  background: linear-gradient(90deg, #69430c 0%, #7a5214 20%, #e8c86d 50%, #7a5214 80%, #69430c 100%);
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  display: inline-block;
+  padding-top: 0.3em;
+  padding-bottom: 0.25em;
+  line-height: 1.6;
+  filter: drop-shadow(0 1px 1.5px rgba(92, 57, 10, 0.35));
+  -webkit-text-stroke: 0.3px rgba(115, 75, 15, 0.3);
+  animation: shimmer 5s linear infinite;
+}
+
+.font-moul-light {
+  font-family: 'Khmer OS Moul Light', 'Moul', cursive;
+  padding-top: 0.3em;
+  padding-bottom: 0.25em;
+  line-height: 1.6;
+}
+
+.text-silver-gradient {
+  background: linear-gradient(135deg, #e0e0e0 0%, #ffffff 40%, #c0c0c0 70%, #f5f5f5 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  display: inline-block;
+  padding-top: 0.35em;
+  padding-bottom: 0.25em;
+}
+
+/* Luxury Card Borders */
+.border-gold-double {
+  border: 1px solid rgba(191, 149, 63, 0.5);
+  position: relative;
+}
+
+.border-gold-double::before {
+  content: '';
+  position: absolute;
+  inset: 4px;
+  border: 1px solid rgba(191, 149, 63, 0.25);
+  pointer-events: none;
+  border-radius: inherit;
+}
+
+/* Background Luxury Patterns */
+.bg-damask-pattern {
+  background-color: #faf8f4;
+  background-image: radial-gradient(rgba(191, 149, 63, 0.08) 1px, transparent 1px),
+                    radial-gradient(rgba(191, 149, 63, 0.05) 1px, #faf8f4 1px);
+  background-size: 24px 24px;
+  background-position: 0 0, 12px 12px;
+}
+
+.bg-kbach-pattern {
+  background-color: #0f172a;
+  background-image: 
+    radial-gradient(circle at 50% 50%, rgba(191, 149, 63, 0.08) 0%, transparent 60%),
+    linear-gradient(to right, rgba(191, 149, 63, 0.03) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(191, 149, 63, 0.03) 1px, transparent 1px);
+  background-size: 100% 100%, 30px 30px, 30px 30px;
+}
+
+/* 3D Envelope Styles */
+.perspective-1000 {
+  perspective: 1000px;
+}
+
+.preserve-3d {
+  transform-style: preserve-3d;
+}
+
+.backface-hidden {
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+/* Audio Wave Visualizer Animation */
+@keyframes audioWave {
+  0%, 100% { height: 4px; }
+  50% { height: 16px; }
+}
+
+.audio-bar-1 { animation: audioWave 1.1s ease-in-out infinite; }
+.audio-bar-2 { animation: audioWave 0.8s ease-in-out infinite 0.2s; }
+.audio-bar-3 { animation: audioWave 1.3s ease-in-out infinite 0.4s; }
+.audio-bar-4 { animation: audioWave 0.9s ease-in-out infinite 0.1s; }
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #faf8f4;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #bf953f;
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #aa771c;
+}
