@@ -309,7 +309,7 @@ export const weddingData = {
       willAttend: "ចូលរួមយ៉ាងរីករាយ",
       cannotAttend: "អវត្តមាន (ផ្ញើតែពរជ័យ)",
       yourName: "ឈ្មោះរបស់លោកអ្នក",
-      yourNamePlaceholder: "ឧ. ឡុង សុវណ្ណ / Long Sovann",
+      yourNamePlaceholder: "ឧ. ឌុក ដារ៉ាពេជ្រឧត្ដម / Duk Darapichoudom",
       yourWish: "សារប្រសិទ្ធពរជ័យ",
       yourWishPlaceholder: "សូមជូនពរឱ្យអ្នកទាំងពីរស្រឡាញ់គ្នាដល់ចាស់កោងខ្នង រកស៊ីមានបាន...",
       sendWish: "ផ្ញើសារជូនពរ",
@@ -364,7 +364,7 @@ export const weddingData = {
       willAttend: "Joyfully Attend",
       cannotAttend: "Unable to Attend (Sending Wishes)",
       yourName: "Your Full Name",
-      yourNamePlaceholder: "e.g. Sok Sovann / Sok San",
+      yourNamePlaceholder: "e.g. Duk Darapichoudom",
       yourWish: "Your Warm Wishes & Blessing",
       yourWishPlaceholder: "Wishing you both a lifetime of love, joy, and prosperity...",
       sendWish: "Send Wishes",
@@ -378,43 +378,4 @@ export const weddingData = {
       closeLightbox: "Close",
     },
   },
-};
-
-/**
- * Generates an .ics Calendar invitation file and triggers download
- */
-export const downloadIcsCalendar = () => {
-  const icsContent = [
-    "BEGIN:VCALENDAR",
-    "VERSION:2.0",
-    "PRODID:-//Khmer Digital Wedding//Samrach and Darareaksmey//EN",
-    "CALSCALE:GREGORIAN",
-    "METHOD:PUBLISH",
-    "BEGIN:VEVENT",
-    "UID:wedding-samrach-darareaksmey-20261121@wedding.kh",
-    "DTSTAMP:20261020T120000Z",
-    "DTSTART:20261121T100000Z", // 5:00 PM ICT
-    "DTEND:20261121T150000Z",   // 10:00 PM ICT
-    "SUMMARY:អាពាហ៍ពិពាហ៍ ភាព សំរេច & ឌុក ដារ៉ារស្មី | Wedding of Pheap Samrach & Duk Darareaksmey",
-    "DESCRIPTION:ពិធីអាពាហ៍ពិពាហ៍ និងពិធីលៀងសាយភោជន៍ ភាព សំរេច និង ឌុក ដារ៉ារស្មី នៅ Battambang Cityhall (អគារ A)",
-    "LOCATION:Battambang Cityhall (អគារ A), Sangkat Chamkar Samraong, Krong Battambang, Cambodia",
-    "STATUS:CONFIRMED",
-    "BEGIN:VALARM",
-    "TRIGGER:-PT24H",
-    "ACTION:DISPLAY",
-    "DESCRIPTION:Reminder: Wedding Reception Tomorrow!",
-    "END:VALARM",
-    "END:VEVENT",
-    "END:VCALENDAR",
-  ].join("\r\n");
-
-  const blob = new Blob([icsContent], { type: "text/calendar;charset=utf-8" });
-  const url = window.URL.createObjectURL(blob);
-  const link = document.createElement("a");
-  link.href = url;
-  link.setAttribute("download", "Samrach_Darareaksmey_Wedding.ics");
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-  window.URL.revokeObjectURL(url);
 };

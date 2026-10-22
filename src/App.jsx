@@ -77,11 +77,11 @@ export default function App() {
           {/* Venue Map & Calendar Add */}
           <VenueLocation lang={lang} />
 
-          {/* ABA KHQR & Gift Cards */}
-          <GiftKhqr lang={lang} />
-
           {/* Pre-wedding Photo Gallery & Lightbox */}
           <PhotoGallery lang={lang} />
+
+          {/* ABA KHQR & Gift Cards */}
+          <GiftKhqr lang={lang} />
 
           {/* RSVP & Interactive Guestbook with Confetti */}
           <GuestbookRSVP lang={lang} />

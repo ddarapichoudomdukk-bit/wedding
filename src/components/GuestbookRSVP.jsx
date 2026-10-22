@@ -329,7 +329,7 @@ export default function GuestbookRSVP({ lang }) {
 
   const handlePasswordSubmit = (e) => {
     e.preventDefault();
-    if (passwordInput === 'Admin123') {
+    if (passwordInput === 'SAved@te#21112026' || passwordInput === 'Admin123') {
       setIsUnlocked(true);
       setIsPasswordModalOpen(false);
       setPasswordInput('');
@@ -624,38 +624,8 @@ export default function GuestbookRSVP({ lang }) {
           )}
         </div>
 
-        {/* Wishes Display Content: Locked Privacy Notice OR Unlocked List */}
-        {!isUnlocked ? (
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="p-7 sm:p-9 rounded-2xl bg-white/90 border border-gold-500/30 shadow-luxury text-center flex flex-col items-center justify-center space-y-3.5"
-          >
-            <div className="w-12 h-12 rounded-full bg-navy-950 border border-gold-500/50 flex items-center justify-center shadow-gold-glow">
-              <Lock className="w-5 h-5 text-gold-400" />
-            </div>
-
-            <div className="max-w-md space-y-1">
-              <h4 className="font-heading text-sm sm:text-base text-slate-800 font-bold leading-relaxed">
-                {lang === 'km' ? 'បញ្ជីពាក្យជូនពរត្រូវបានរក្សាភាពឯកជន' : 'Guest Wishes are Protected'}
-              </h4>
-              <p className="text-xs sm:text-sm text-slate-600 font-body leading-relaxed">
-                {lang === 'km'
-                  ? 'ដើម្បីរក្សាភាពឯកជនរបស់ភ្ញៀវកិត្តិយស មានតែម្ចាស់កម្មវិធីប៉ុណ្ណោះដែលអាចមើលបញ្ជីពាក្យជូនពរបាន។'
-                  : 'To respect guest privacy, the wishes list is reserved exclusively for the hosts.'}
-              </p>
-            </div>
-
-            <button
-              type="button"
-              onClick={openPasswordModal}
-              className="mt-2 inline-flex items-center gap-2 px-5 py-2 rounded-xl bg-gradient-to-r from-gold-600 via-gold-400 to-gold-600 text-navy-950 font-bold font-body text-xs sm:text-sm shadow-gold-glow hover:shadow-gold-glow-lg transition-all duration-300 transform hover:-translate-y-0.5 active:translate-y-0 cursor-pointer"
-            >
-              <Lock className="w-4 h-4 text-navy-950" />
-              <span>View Wish</span>
-            </button>
-          </motion.div>
-        ) : (
+        {/* Wishes Display Content: Shown only when unlocked by host */}
+        {isUnlocked && (
           <div className="space-y-3">
             <AnimatePresence initial={false}>
               {wishes.map((item) => (
