@@ -1,21 +1,15 @@
 /**
- * Wedding Wishes Service (Local Storage + Online Cloud Sync)
+ * Wedding Wishes Service (Local Storage + Supabase Storage & Database Integration)
  * 
- * Primary Local Key: 'wedding_wishes_data'
- * 
- * Supports:
- * 1. LocalStorage (Primary default - instant loading & persistence)
- * 2. Supabase Free Tier (Cross-device Cloud database using REST API)
- * 3. Firebase Firestore (Schema and integration ready)
+ * Storage Key: 'wedding_wishes_data'
+ * Supabase Bucket: 'receipts'
+ * Supabase Table: 'wishes'
  */
+import { supabase, isSupabaseConfigured } from './supabaseClient';
+
+export { supabase, isSupabaseConfigured };
 
 export const STORAGE_KEY = 'wedding_wishes_data';
-
-// Optional Supabase credentials from Vite environment variables (.env)
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || '';
-const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
-
-export const isCloudConfigured = Boolean(SUPABASE_URL && SUPABASE_ANON_KEY);
 
 /**
  * Read wishes from localStorage
@@ -55,98 +49,125 @@ export const saveLocalWishes = (wishes) => {
 };
 
 /**
- * Fetch wishes from online cloud (Supabase REST API)
- * Schema expected in Supabase table "wishes":
- *  - id (text, primary key)
- *  - name (text)
- *  - message (text)
- *  - attending (boolean)
- *  - receipt_url (text, nullable)
- *  - created_at (timestamptz)
+ * Upload receipt image directly to Supabase Storage Bucket 'receipts'
+ * Returns the public URL or null
  */
-export const fetchCloudWishes = async () => {
-  if (!isCloudConfigured) return null;
+export const uploadReceiptToSupabase = async (file) => {
+  if (!supabase || !file) return null;
 
   try {
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/wishes?select=*&order=created_at.desc`, {
-      headers: {
-        apikey: SUPABASE_ANON_KEY,
-        Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
-      },
-    });
+    // Generate unique filename
+    const fileName = `${Date.now()}-${file.name.replace(/\s+/g, '_')}`;
 
-    if (!res.ok) {
-      console.warn('[WishesService] Supabase fetch error status:', res.status);
+    // Upload file to bucket 'receipts'
+    const { error: uploadError } = await supabase.storage
+      .from('receipts')
+      .upload(fileName, file, {
+        cacheControl: '3600',
+        upsert: false,
+      });
+
+    if (uploadError) {
+      console.error('[Supabase Storage] Upload error:', uploadError);
       return null;
     }
 
-    const data = await res.json();
-    return data.map((item) => ({
-      id: item.id,
-      name: item.name,
-      message: item.message,
-      willAttend: item.attending ?? true,
-      receiptImage: item.receipt_url || null,
-      createdAt: item.created_at || new Date().toISOString(),
-    }));
+    // Retrieve public URL
+    const { data } = supabase.storage
+      .from('receipts')
+      .getPublicUrl(fileName);
+
+    return data?.publicUrl || null;
   } catch (err) {
-    console.warn('[WishesService] Cloud fetch failed, falling back to local:', err);
+    console.error('[Supabase Storage] Unexpected error:', err);
     return null;
   }
 };
 
 /**
- * Push new wish to online cloud (Supabase)
+ * Fetch wishes from Supabase Database Table 'wishes'
  */
-export const saveWishToCloud = async (wish) => {
-  if (!isCloudConfigured) return false;
+export const fetchWishesFromSupabase = async () => {
+  if (!supabase) return null;
 
   try {
-    const payload = {
-      id: wish.id,
-      name: wish.name,
-      message: wish.message,
-      attending: wish.willAttend,
-      receipt_url: wish.receiptImage || null,
-      created_at: wish.createdAt || new Date().toISOString(),
-    };
+    const { data, error } = await supabase
+      .from('wishes')
+      .select('*')
+      .order('created_at', { ascending: false });
 
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/wishes`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        apikey: SUPABASE_ANON_KEY,
-        Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
-        Prefer: 'return=minimal',
-      },
-      body: JSON.stringify(payload),
-    });
+    if (error) {
+      console.warn('[Supabase Database] Fetch error:', error);
+      return null;
+    }
 
-    return res.ok;
+    return (data || []).map((item) => ({
+      id: item.id?.toString() || Date.now().toString(),
+      name: item.name,
+      message: item.message,
+      willAttend: item.attending ?? true,
+      receipt_url: item.receipt_url || null,
+      receiptImage: item.receipt_url || null,
+      createdAt: item.created_at || new Date().toISOString(),
+    }));
   } catch (err) {
-    console.warn('[WishesService] Could not send wish to cloud:', err);
-    return false;
+    console.warn('[Supabase Database] Failed to fetch:', err);
+    return null;
   }
 };
 
 /**
- * Delete a wish from online cloud (Supabase)
+ * Insert a new wish record into Supabase Database Table 'wishes'
  */
-export const deleteWishFromCloud = async (wishId) => {
-  if (!isCloudConfigured) return false;
+export const insertWishToSupabase = async ({ name, message, attending, receipt_url, created_at }) => {
+  if (!supabase) return null;
 
   try {
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/wishes?id=eq.${wishId}`, {
-      method: 'DELETE',
-      headers: {
-        apikey: SUPABASE_ANON_KEY,
-        Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
-      },
-    });
+    const record = {
+      name,
+      message,
+      attending,
+      receipt_url: receipt_url || null,
+      created_at: created_at || new Date().toISOString(),
+    };
 
-    return res.ok;
+    const { data, error } = await supabase
+      .from('wishes')
+      .insert([record])
+      .select();
+
+    if (error) {
+      console.error('[Supabase Database] Insert error:', error);
+      return null;
+    }
+
+    return data?.[0] || null;
   } catch (err) {
-    console.warn('[WishesService] Could not delete wish from cloud:', err);
+    console.error('[Supabase Database] Insert unexpected error:', err);
+    return null;
+  }
+};
+
+/**
+ * Delete a wish from Supabase Database Table 'wishes'
+ */
+export const deleteWishFromSupabase = async (id) => {
+  if (!supabase) return false;
+
+  try {
+    const { error } = await supabase
+      .from('wishes')
+      .delete()
+      .eq('id', id);
+
+    if (error) {
+      console.error('[Supabase Database] Delete error:', error);
+      return false;
+    }
+
+    return true;
+  } catch (err) {
+    console.error('[Supabase Database] Delete unexpected error:', err);
     return false;
   }
 };

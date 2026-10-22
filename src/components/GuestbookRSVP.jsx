@@ -5,11 +5,13 @@ import { weddingData } from '../data/weddingData';
 import { formatRelativeTime } from '../utils/timeAgo';
 import {
   STORAGE_KEY,
-  isCloudConfigured,
-  fetchCloudWishes,
-  saveWishToCloud,
-  deleteWishFromCloud,
+  supabase,
+  isSupabaseConfigured,
   saveLocalWishes,
+  uploadReceiptToSupabase,
+  fetchWishesFromSupabase,
+  insertWishToSupabase,
+  deleteWishFromSupabase,
 } from '../services/wishesService';
 import { 
   Send, 
@@ -94,9 +96,19 @@ export default function GuestbookRSVP({ lang }) {
   const [submittedSuccess, setSubmittedSuccess] = useState(false);
 
   // Receipt image upload state
-  const [receiptImage, setReceiptImage] = useState(null);
+  const [receiptFile, setReceiptFile] = useState(null);
+  const [receiptPreview, setReceiptPreview] = useState(null);
   const [selectedReceipt, setSelectedReceipt] = useState(null);
   const fileInputRef = useRef(null);
+
+  // Clean up object URL when component unmounts or preview changes
+  useEffect(() => {
+    return () => {
+      if (receiptPreview && receiptPreview.startsWith('blob:')) {
+        URL.revokeObjectURL(receiptPreview);
+      }
+    };
+  }, [receiptPreview]);
 
   // Realtime tick timer to re-evaluate time-ago relative strings dynamically
   const [, setTick] = useState(0);
@@ -116,13 +128,13 @@ export default function GuestbookRSVP({ lang }) {
   const [showPassword, setShowPassword] = useState(false);
   const [passwordError, setPasswordError] = useState('');
 
-  // Synchronize with online cloud database if configured (e.g. Supabase / Firebase)
+  // Synchronize with Supabase database if configured
   useEffect(() => {
-    if (isCloudConfigured) {
-      fetchCloudWishes().then((cloudData) => {
-        if (cloudData && cloudData.length > 0) {
-          setWishes(cloudData);
-          saveLocalWishes(cloudData);
+    if (supabase) {
+      fetchWishesFromSupabase().then((remoteWishes) => {
+        if (remoteWishes && remoteWishes.length > 0) {
+          setWishes(remoteWishes);
+          saveLocalWishes(remoteWishes);
         }
       });
     }
@@ -176,8 +188,8 @@ export default function GuestbookRSVP({ lang }) {
     });
   };
 
-  // Image upload and compression handler
-  const handleImageUpload = (e) => {
+  // Image selection handler (stores File object and creates object URL preview)
+  const handleFileChange = (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -186,96 +198,118 @@ export default function GuestbookRSVP({ lang }) {
       return;
     }
 
-    const reader = new FileReader();
-    reader.onload = (loadEvent) => {
-      const img = new window.Image();
-      img.onload = () => {
-        // Compress / resize to max 1200px to ensure reasonable localStorage storage
-        const maxDimension = 1200;
-        let width = img.width;
-        let height = img.height;
+    if (receiptPreview && receiptPreview.startsWith('blob:')) {
+      URL.revokeObjectURL(receiptPreview);
+    }
 
-        if (width > maxDimension || height > maxDimension) {
-          if (width > height) {
-            height = Math.round((height * maxDimension) / width);
-            width = maxDimension;
-          } else {
-            width = Math.round((width * maxDimension) / height);
-            height = maxDimension;
-          }
-        }
-
-        const canvas = document.createElement('canvas');
-        canvas.width = width;
-        canvas.height = height;
-        const ctx = canvas.getContext('2d');
-        ctx.drawImage(img, 0, 0, width, height);
-
-        const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.82);
-        setReceiptImage(compressedDataUrl);
-      };
-      img.onerror = () => {
-        setReceiptImage(loadEvent.target.result);
-      };
-      img.src = loadEvent.target.result;
-    };
-    reader.readAsDataURL(file);
+    setReceiptFile(file);
+    const previewUrl = URL.createObjectURL(file);
+    setReceiptPreview(previewUrl);
   };
 
-  const handleRemoveImage = () => {
-    setReceiptImage(null);
+  const handleRemoveFile = () => {
+    if (receiptPreview && receiptPreview.startsWith('blob:')) {
+      URL.revokeObjectURL(receiptPreview);
+    }
+    setReceiptFile(null);
+    setReceiptPreview(null);
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!formData.name.trim() || !formData.message.trim()) return;
 
     setIsSubmitting(true);
 
-    setTimeout(() => {
+    try {
+      let receipt_url = null;
+
+      // 1. Upload receipt file to Supabase Storage Bucket 'receipts'
+      if (receiptFile) {
+        if (supabase) {
+          const uploadedUrl = await uploadReceiptToSupabase(receiptFile);
+          if (uploadedUrl) {
+            receipt_url = uploadedUrl;
+          }
+        }
+
+        // Fallback to data URL for local storage if Supabase is not connected
+        if (!receipt_url) {
+          try {
+            const dataUrl = await new Promise((resolve) => {
+              const reader = new FileReader();
+              reader.onload = (loadEvt) => resolve(loadEvt.target.result);
+              reader.onerror = () => resolve(null);
+              reader.readAsDataURL(receiptFile);
+            });
+            receipt_url = dataUrl;
+          } catch (err) {
+            console.warn('Could not read image as data URL:', err);
+          }
+        }
+      }
+
       const nowIso = new Date().toISOString();
+      let createdId = Date.now().toString();
+
+      // 2. Insert record into Supabase Database Table 'wishes'
+      if (supabase) {
+        const inserted = await insertWishToSupabase({
+          name: formData.name.trim(),
+          message: formData.message.trim(),
+          attending: formData.willAttend,
+          receipt_url: receipt_url,
+          created_at: nowIso,
+        });
+        if (inserted?.id) {
+          createdId = inserted.id.toString();
+        }
+      }
+
+      // 3. New wish object for immediate React State and LocalStorage
       const newWish = {
-        id: Date.now().toString(),
+        id: createdId,
         name: formData.name.trim(),
         message: formData.message.trim(),
         willAttend: formData.willAttend,
+        receipt_url: receipt_url,
+        receiptImage: receipt_url,
         createdAt: nowIso,
         timestamp: lang === 'km' ? 'អម្បាញ់មិញ' : 'Just now',
-        receiptImage: receiptImage || null,
       };
 
       setWishes((prevWishes) => {
         const updated = [newWish, ...prevWishes];
-        try {
-          localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
-        } catch (e) {
-          console.warn('Could not update localStorage after new wish:', e);
-        }
+        saveLocalWishes(updated);
         return updated;
       });
 
-      if (isCloudConfigured) {
-        saveWishToCloud(newWish);
-      }
-
+      // 4. Reset Form & File inputs
       setFormData({ name: '', message: '', willAttend: true });
-      setReceiptImage(null);
+      if (receiptPreview && receiptPreview.startsWith('blob:')) {
+        URL.revokeObjectURL(receiptPreview);
+      }
+      setReceiptFile(null);
+      setReceiptPreview(null);
       if (fileInputRef.current) {
         fileInputRef.current.value = '';
       }
-      setIsSubmitting(false);
+
       setSubmittedSuccess(true);
       triggerConfetti();
-
       setTimeout(() => setSubmittedSuccess(false), 5000);
-    }, 600);
+    } catch (err) {
+      console.error('Error submitting wish:', err);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   // Delete wish handler (Host / Admin only)
-  const handleDeleteWish = (wishId) => {
+  const handleDeleteWish = async (wishId) => {
     const confirmMessage = lang === 'km'
       ? 'តើអ្នកពិតជាចង់លុបសារជូនពរនេះមែនទេ?'
       : 'Are you sure you want to delete this wish?';
@@ -283,16 +317,12 @@ export default function GuestbookRSVP({ lang }) {
     if (window.confirm(confirmMessage)) {
       setWishes((prevWishes) => {
         const updated = prevWishes.filter((w) => w.id !== wishId);
-        try {
-          localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
-        } catch (e) {
-          console.warn('Could not update localStorage after delete:', e);
-        }
+        saveLocalWishes(updated);
         return updated;
       });
 
-      if (isCloudConfigured) {
-        deleteWishFromCloud(wishId);
+      if (supabase) {
+        await deleteWishFromSupabase(wishId);
       }
     }
   };
@@ -436,12 +466,12 @@ export default function GuestbookRSVP({ lang }) {
               ref={fileInputRef}
               type="file"
               accept="image/*"
-              onChange={handleImageUpload}
+              onChange={handleFileChange}
               className="hidden"
               id="transfer-receipt-input"
             />
 
-            {!receiptImage ? (
+            {!receiptPreview ? (
               <div
                 onClick={() => fileInputRef.current?.click()}
                 className="border-2 border-dashed border-gold-500/40 hover:border-gold-500 hover:bg-gold-500/5 rounded-xl p-4 sm:p-5 transition-all duration-200 cursor-pointer flex flex-col items-center justify-center text-center bg-cream-50/40 group"
@@ -464,13 +494,13 @@ export default function GuestbookRSVP({ lang }) {
               <div className="relative rounded-xl border border-gold-500/40 bg-cream-50/70 p-3 flex flex-col sm:flex-row items-center gap-3">
                 <div className="relative group/preview shrink-0">
                   <img
-                    src={receiptImage}
+                    src={receiptPreview}
                     alt="Transfer Receipt Preview"
                     className="w-24 h-24 sm:w-28 sm:h-28 object-cover rounded-lg border border-gold-500/30 shadow-sm bg-white"
                   />
                   <button
                     type="button"
-                    onClick={() => setSelectedReceipt(receiptImage)}
+                    onClick={() => setSelectedReceipt(receiptPreview)}
                     className="absolute inset-0 bg-black/40 opacity-0 group-hover/preview:opacity-100 transition-opacity rounded-lg flex items-center justify-center text-white text-xs font-body font-semibold gap-1 cursor-pointer"
                     title={lang === 'km' ? 'ពង្រីកមើលរូបធំ' : 'View full image'}
                   >
@@ -483,8 +513,8 @@ export default function GuestbookRSVP({ lang }) {
                     <CheckCircle className="w-4 h-4 text-emerald-600" />
                     <span>{lang === 'km' ? 'បានជ្រើសរើសរូបភាពរួចរាល់' : 'Receipt image attached'}</span>
                   </div>
-                  <p className="text-[11px] text-slate-500 font-body">
-                    {lang === 'km' ? 'រូបភាពនឹងត្រូវបញ្ជូនជាមួយសារជូនពររបស់អ្នក' : 'Will be sent together with your wish'}
+                  <p className="text-[11px] text-slate-500 font-body truncate">
+                    {receiptFile ? receiptFile.name : (lang === 'km' ? 'រូបភាពរួចរាល់សម្រាប់ Upload' : 'Ready to upload')}
                   </p>
                   <button
                     type="button"
@@ -498,7 +528,7 @@ export default function GuestbookRSVP({ lang }) {
                 {/* Clear / Delete image button (X) */}
                 <button
                   type="button"
-                  onClick={handleRemoveImage}
+                  onClick={handleRemoveFile}
                   className="absolute top-2 right-2 sm:relative sm:top-auto sm:right-auto p-1.5 rounded-full bg-rose-50 hover:bg-rose-100 text-rose-500 hover:text-rose-700 border border-rose-200 transition-colors cursor-pointer shadow-sm"
                   title={lang === 'km' ? 'លុបរូបភាពនេះចេញ' : 'Remove image'}
                   aria-label="Remove image"
@@ -518,7 +548,9 @@ export default function GuestbookRSVP({ lang }) {
             {isSubmitting ? (
               <span className="flex items-center gap-2">
                 <Sparkles className="w-4 h-4 animate-spin" />
-                {t.sending}
+                {receiptFile 
+                  ? (lang === 'km' ? 'កំពុង Upload & ផ្ញើ...' : 'Uploading & Sending...') 
+                  : t.sending}
               </span>
             ) : (
               <span className="flex items-center gap-2">
@@ -680,7 +712,7 @@ export default function GuestbookRSVP({ lang }) {
                   </p>
 
                   {/* Transfer Receipt Thumbnail (if attached) */}
-                  {item.receiptImage && (
+                  {(item.receipt_url || item.receiptImage) && (
                     <div className="mt-2.5 pl-9">
                       <div className="inline-flex flex-col items-start">
                         <span className="text-[10px] font-semibold text-slate-500 font-body mb-1 flex items-center gap-1">
@@ -689,12 +721,12 @@ export default function GuestbookRSVP({ lang }) {
                         </span>
                         <button
                           type="button"
-                          onClick={() => setSelectedReceipt(item.receiptImage)}
+                          onClick={() => setSelectedReceipt(item.receipt_url || item.receiptImage)}
                           className="relative group/thumb rounded-lg overflow-hidden border border-gold-500/40 bg-slate-100 shadow-sm hover:shadow-md hover:border-gold-500 transition-all cursor-pointer focus:outline-none focus:ring-2 focus:ring-gold-500/30 text-left"
                           title={lang === 'km' ? 'ចុចដើម្បីពង្រីកមើលរូបភាពពេញ' : 'Click to view full receipt'}
                         >
                           <img
-                            src={item.receiptImage}
+                            src={item.receipt_url || item.receiptImage}
                             alt="Transfer Receipt Thumbnail"
                             className="w-20 h-20 sm:w-24 sm:h-24 object-cover group-hover/thumb:scale-105 transition-transform duration-300"
                           />
