@@ -3,6 +3,14 @@ import { motion, AnimatePresence } from 'framer-motion';
 import confetti from 'canvas-confetti';
 import { weddingData } from '../data/weddingData';
 import { formatRelativeTime } from '../utils/timeAgo';
+import {
+  STORAGE_KEY,
+  isCloudConfigured,
+  fetchCloudWishes,
+  saveWishToCloud,
+  deleteWishFromCloud,
+  saveLocalWishes,
+} from '../services/wishesService';
 import { 
   Send, 
   CheckCircle, 
@@ -54,21 +62,24 @@ export default function GuestbookRSVP({ lang }) {
   const t = weddingData.i18n[lang];
   const [wishes, setWishes] = useState(() => {
     try {
-      const saved = localStorage.getItem('khmer_wedding_wishes');
+      const saved = localStorage.getItem(STORAGE_KEY) || localStorage.getItem('khmer_wedding_wishes');
       if (saved) {
         const parsed = JSON.parse(saved);
-        return parsed.map((w, idx) => {
-          if (!w.createdAt) {
-            return {
-              ...w,
-              createdAt: new Date(Date.now() - (idx + 1) * 3600000).toISOString(),
-            };
-          }
-          return w;
-        });
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          return parsed.map((w, idx) => {
+            if (!w.createdAt) {
+              return {
+                ...w,
+                createdAt: new Date(Date.now() - (idx + 1) * 3600000).toISOString(),
+              };
+            }
+            return w;
+          });
+        }
       }
       return INITIAL_WISHES;
     } catch (e) {
+      console.warn('Could not read from localStorage:', e);
       return INITIAL_WISHES;
     }
   });
@@ -105,9 +116,21 @@ export default function GuestbookRSVP({ lang }) {
   const [showPassword, setShowPassword] = useState(false);
   const [passwordError, setPasswordError] = useState('');
 
+  // Synchronize with online cloud database if configured (e.g. Supabase / Firebase)
+  useEffect(() => {
+    if (isCloudConfigured) {
+      fetchCloudWishes().then((cloudData) => {
+        if (cloudData && cloudData.length > 0) {
+          setWishes(cloudData);
+          saveLocalWishes(cloudData);
+        }
+      });
+    }
+  }, []);
+
   useEffect(() => {
     try {
-      localStorage.setItem('khmer_wedding_wishes', JSON.stringify(wishes));
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(wishes));
     } catch (e) {
       console.warn("Could not save to localStorage:", e);
     }
@@ -224,7 +247,20 @@ export default function GuestbookRSVP({ lang }) {
         receiptImage: receiptImage || null,
       };
 
-      setWishes((prevWishes) => [newWish, ...prevWishes]);
+      setWishes((prevWishes) => {
+        const updated = [newWish, ...prevWishes];
+        try {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+        } catch (e) {
+          console.warn('Could not update localStorage after new wish:', e);
+        }
+        return updated;
+      });
+
+      if (isCloudConfigured) {
+        saveWishToCloud(newWish);
+      }
+
       setFormData({ name: '', message: '', willAttend: true });
       setReceiptImage(null);
       if (fileInputRef.current) {
@@ -248,12 +284,16 @@ export default function GuestbookRSVP({ lang }) {
       setWishes((prevWishes) => {
         const updated = prevWishes.filter((w) => w.id !== wishId);
         try {
-          localStorage.setItem('khmer_wedding_wishes', JSON.stringify(updated));
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
         } catch (e) {
           console.warn('Could not update localStorage after delete:', e);
         }
         return updated;
       });
+
+      if (isCloudConfigured) {
+        deleteWishFromCloud(wishId);
+      }
     }
   };
 
