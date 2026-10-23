@@ -3,7 +3,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { weddingData } from '../data/weddingData';
 import { weddingAudio } from '../utils/audioPlayer';
 import { Sparkles, Heart } from 'lucide-react';
-import DoodleHeart from './DoodleHeart';
 
 export default function EnvelopeModal({ isOpen, onOpen, lang = 'km' }) {
   const [isOpening, setIsOpening] = useState(false);
@@ -42,28 +41,55 @@ export default function EnvelopeModal({ isOpen, onOpen, lang = 'km' }) {
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-red-950/30 rounded-full blur-[100px] pointer-events-none" />
         </div>
 
-        <div className="relative w-full max-w-md mx-auto flex flex-col items-center">
+        <div className="relative w-full max-w-lg mx-auto flex flex-col items-center">
           {/* Header prompt */}
           <motion.div
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.2 }}
-            className="text-center mb-6"
+            className="text-center mb-5 w-full px-2"
           >
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs uppercase tracking-widest text-gold-200 bg-gold-500/15 border border-gold-400/40 mb-2 shadow-sm">
-              <Sparkles className="w-3.5 h-3.5 text-gold-300" />
+            <span className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full text-xs uppercase tracking-widest text-stone-700 bg-stone-100/80 border border-stone-300/60 mb-3 shadow-xs font-medium">
+              <Sparkles className="w-3.5 h-3.5 text-gold-600" />
               {t.weddingInvitation}
             </span>
-            <h1 className="font-heading text-lg sm:text-xl md:text-2xl text-gold-gradient font-bold drop-shadow flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2.5">
-              <span>{weddingData.couple.groom.nameKm}</span>
-              <DoodleHeart className="w-5 h-5 sm:w-6 sm:h-6" color="#e11d48" />
-              <span>{weddingData.couple.bride.nameKm}</span>
-            </h1>
-            <p className="font-serifAccent italic text-gold-200/80 text-xs sm:text-sm mt-1 flex items-center justify-center gap-1.5">
-              <span>{weddingData.couple.groom.nameEn}</span>
-              <DoodleHeart className="w-3.5 h-3.5" color="#e11d48" />
-              <span>{weddingData.couple.bride.nameEn}</span>
-            </p>
+
+            {/* Couple names flanking big red sketch heart */}
+            <div className="flex items-center justify-center gap-2.5 sm:gap-4 md:gap-5">
+              {/* Groom (Left) */}
+              <div className="flex flex-col items-center text-center shrink-0 min-w-0">
+                <span className="font-heading text-lg sm:text-2xl md:text-3xl text-gold-gradient font-bold drop-shadow whitespace-nowrap leading-tight">
+                  {weddingData.couple.groom.nameKm}
+                </span>
+                <span className="font-serifAccent italic text-stone-700 font-medium text-base md:text-lg whitespace-nowrap mt-0.5 sm:mt-1 tracking-wide">
+                  {weddingData.couple.groom.nameEn}
+                </span>
+              </div>
+
+              {/* Central Big Red Sketch Heart */}
+              <motion.div
+                className="shrink-0 flex items-center justify-center px-0.5 sm:px-1"
+                animate={{ scale: [1, 1.06, 1] }}
+                transition={{ duration: 2.2, repeat: Infinity, ease: "easeInOut" }}
+              >
+                <img
+                  src="/images/red-sketch-heart.png"
+                  alt="Heart"
+                  className="w-14 h-14 sm:w-16 sm:h-16 md:w-24 md:h-24 object-contain drop-shadow-[0_2px_10px_rgba(220,38,38,0.35)] select-none pointer-events-none"
+                  loading="eager"
+                />
+              </motion.div>
+
+              {/* Bride (Right) */}
+              <div className="flex flex-col items-center text-center shrink-0 min-w-0">
+                <span className="font-heading text-lg sm:text-2xl md:text-3xl text-gold-gradient font-bold drop-shadow whitespace-nowrap leading-tight">
+                  {weddingData.couple.bride.nameKm}
+                </span>
+                <span className="font-serifAccent italic text-stone-700 font-medium text-base md:text-lg whitespace-nowrap mt-0.5 sm:mt-1 tracking-wide">
+                  {weddingData.couple.bride.nameEn}
+                </span>
+              </div>
+            </div>
           </motion.div>
 
           {/* 3D Envelope Container */}
@@ -94,11 +120,15 @@ export default function EnvelopeModal({ isOpen, onOpen, lang = 'km' }) {
                     {t.blessingHeader}
                   </div>
                   <div className="flex flex-col items-center">
-                    <h2 className="font-logo text-xl text-gold-700 font-bold inline-block pt-[0.3em] pb-[0.25em]">
+                    <h2 className="font-logo text-xl text-gold-700 font-bold inline-block pt-[0.2em] pb-[0.1em]">
                       {weddingData.couple.groom.nameKm}
                     </h2>
-                    <DoodleHeart className="w-5 h-5 my-0.5" color="#e11d48" />
-                    <h2 className="font-logo text-xl text-gold-700 font-bold inline-block pt-[0.3em] pb-[0.25em]">
+                    <img 
+                      src="/images/red-sketch-heart.png" 
+                      alt="Heart" 
+                      className="w-7 h-7 my-1 object-contain select-none pointer-events-none" 
+                    />
+                    <h2 className="font-logo text-xl text-gold-700 font-bold inline-block pt-[0.1em] pb-[0.2em]">
                       {weddingData.couple.bride.nameKm}
                     </h2>
                   </div>
@@ -240,7 +270,7 @@ export default function EnvelopeModal({ isOpen, onOpen, lang = 'km' }) {
               <Sparkles className="w-4 h-4 text-navy-950" />
               <span>{isOpening ? (lang === 'km' ? 'កំពុងបើកធៀប...' : 'Opening...') : t.openInvitation}</span>
             </button>
-            <p className="text-xs text-gold-200/80 mt-2 font-body">
+            <p className="text-xs text-stone-600 font-medium mt-2 font-body">
               {t.tapToOpen}
             </p>
           </motion.div>

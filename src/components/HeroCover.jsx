@@ -2,7 +2,6 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { weddingData } from '../data/weddingData';
 import { Sparkles, Calendar, MapPin } from 'lucide-react';
-import DoodleHeart from './DoodleHeart';
 
 export default function HeroCover({ lang }) {
   const t = weddingData.i18n[lang];
@@ -28,30 +27,48 @@ export default function HeroCover({ lang }) {
         <div className="h-[1px] w-12 sm:w-20 bg-gradient-to-r from-transparent via-gold-500 to-transparent" />
       </motion.div>
 
-      {/* Main Couple Name in Moulpali Font with Cute Hand-Drawn Doodle Heart */}
+      {/* Main Couple Name with Central Large Red Sketch Heart */}
       <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.9, delay: 0.1 }}
-        className="mb-4 w-full max-w-2xl mx-auto"
+        className="mb-4 sm:mb-6 w-full max-w-3xl mx-auto px-2"
       >
-        <h1 className="font-logo text-2xl sm:text-3xl md:text-4xl lg:text-5xl text-gold-gradient font-bold drop-shadow-sm leading-relaxed px-2 flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-4 md:gap-6">
-          <span className="whitespace-nowrap">{couple.groom.nameKm}</span>
-          <DoodleHeart 
-            className="w-7 h-7 sm:w-8 sm:h-8 md:w-10 md:h-10 my-0.5 sm:my-0" 
-            color="#e11d48"
-          />
-          <span className="whitespace-nowrap">{couple.bride.nameKm}</span>
-        </h1>
+        <div className="flex items-center justify-center gap-3 md:gap-5">
+          {/* Groom (Left) */}
+          <div className="flex flex-col items-center text-center shrink-0 min-w-0">
+            <h1 className="font-logo text-xl sm:text-2xl md:text-3xl lg:text-4xl text-gold-gradient font-bold drop-shadow-sm whitespace-nowrap leading-relaxed">
+              {couple.groom.nameKm}
+            </h1>
+            <p className="font-serifAccent text-base md:text-lg text-stone-700 font-medium italic tracking-wide whitespace-nowrap">
+              {couple.groom.nameEn}
+            </p>
+          </div>
 
-        <p className="font-serifAccent text-base sm:text-lg md:text-xl text-slate-700 italic tracking-wide mt-2 flex items-center justify-center gap-2">
-          <span>{couple.groom.nameEn}</span>
-          <DoodleHeart 
-            className="w-4 h-4 sm:w-5 sm:h-5" 
-            color="#e11d48"
-          />
-          <span>{couple.bride.nameEn}</span>
-        </p>
+          {/* Central Big Red Sketch Heart */}
+          <motion.div
+            className="shrink-0 flex items-center justify-center px-0.5 sm:px-1"
+            animate={{ scale: [1, 1.06, 1] }}
+            transition={{ duration: 2.2, repeat: Infinity, ease: "easeInOut" }}
+          >
+            <img
+              src="/images/red-sketch-heart.png"
+              alt="Heart"
+              className="w-14 h-14 sm:w-16 sm:h-16 md:w-24 md:h-24 object-contain drop-shadow-[0_2px_8px_rgba(220,38,38,0.22)] select-none pointer-events-none"
+              loading="eager"
+            />
+          </motion.div>
+
+          {/* Bride (Right) */}
+          <div className="flex flex-col items-center text-center shrink-0 min-w-0">
+            <div className="font-logo text-xl sm:text-2xl md:text-3xl lg:text-4xl text-gold-gradient font-bold drop-shadow-sm whitespace-nowrap leading-relaxed">
+              {couple.bride.nameKm}
+            </div>
+            <p className="font-serifAccent text-base md:text-lg text-stone-700 font-medium italic tracking-wide whitespace-nowrap">
+              {couple.bride.nameEn}
+            </p>
+          </div>
+        </div>
       </motion.div>
 
       {/* Couple Portrait Card with Luxury Golden Arch Frame */}
