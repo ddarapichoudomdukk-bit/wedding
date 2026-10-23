@@ -49,10 +49,9 @@ export default function PhotoGallery({ lang }) {
       </div>
 
       {/* Responsive Gallery Grid */}
-      <div className="grid grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4">
+      <div className="grid grid-cols-2 gap-3 sm:gap-4 md:gap-5">
         {gallery.map((photo, index) => {
-          // Dynamic layout: alternating 2-span landscape features with portrait cards
-          const isLarge = index === 0 || index === 3 || index === 7;
+          const isLarge = photo.span === 2;
           const posClass = photo.position || (photo.orientation === 'portrait' ? 'object-top' : 'object-center');
 
           return (
@@ -61,12 +60,12 @@ export default function PhotoGallery({ lang }) {
               initial={{ opacity: 0, scale: 0.95 }}
               whileInView={{ opacity: 1, scale: 1 }}
               viewport={{ once: true }}
-              transition={{ duration: 0.5, delay: index * 0.08 }}
+              transition={{ duration: 0.5, delay: index * 0.06 }}
               onClick={() => openLightbox(index)}
-              className={`relative group rounded-xl overflow-hidden cursor-pointer shadow-md hover:shadow-gold-glow border border-gold-400/30 bg-navy-950 ${
+              className={`relative group rounded-2xl overflow-hidden cursor-pointer shadow-md hover:shadow-gold-glow border border-gold-400/30 bg-navy-950 ${
                 isLarge 
-                  ? (index === 7 ? 'col-span-2 md:col-span-3 aspect-[16/9] sm:aspect-[21/9]' : 'col-span-2 aspect-[16/9]') 
-                  : 'aspect-square sm:aspect-[4/5]'
+                  ? 'col-span-2 aspect-[16/9] sm:aspect-[21/9]' 
+                  : 'col-span-1 aspect-[3/4] sm:aspect-[4/5]'
               }`}
             >
               <img
@@ -87,7 +86,7 @@ export default function PhotoGallery({ lang }) {
               </div>
 
               {/* Expand Icon Badge */}
-              <div className="absolute top-2 right-2 p-1.5 rounded-full bg-navy-900/80 text-gold-300 opacity-0 group-hover:opacity-100 transition-opacity duration-300 shadow">
+              <div className="absolute top-2.5 right-2.5 p-1.5 rounded-full bg-navy-900/80 text-gold-300 opacity-0 group-hover:opacity-100 transition-opacity duration-300 shadow">
                 <Maximize2 className="w-3.5 h-3.5" />
               </div>
             </motion.div>
