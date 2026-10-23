@@ -32,42 +32,47 @@ export default function HeroCover({ lang }) {
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.9, delay: 0.1 }}
-        className="mb-4 sm:mb-6 w-full max-w-3xl mx-auto px-2"
+        className="mb-4 sm:mb-6 w-full max-w-4xl mx-auto px-2 flex flex-col items-center"
       >
-        <div className="flex items-center justify-center gap-3 md:gap-5">
-          {/* Groom (Left) */}
-          <div className="flex flex-col items-center text-center shrink-0 min-w-0">
-            <h1 className="font-logo text-xl sm:text-2xl md:text-3xl lg:text-4xl text-gold-gradient font-bold drop-shadow-sm whitespace-nowrap leading-relaxed">
-              {couple.groom.nameKm}
-            </h1>
-            <p className="font-serifAccent text-base md:text-lg text-stone-700 font-medium italic tracking-wide whitespace-nowrap">
-              {couple.groom.nameEn}
-            </p>
-          </div>
+        {/* Row 1: Khmer names flanking the big heart */}
+        <div className="flex flex-nowrap items-center justify-center gap-1.5 sm:gap-4 md:gap-6">
+          <h1 className="font-logo text-3xl sm:text-4xl md:text-5xl text-gold-gradient drop-shadow-sm whitespace-nowrap leading-relaxed">
+            {couple.groom.nameKm}
+          </h1>
 
           {/* Central Big Red Sketch Heart */}
           <motion.div
-            className="shrink-0 flex items-center justify-center px-0.5 sm:px-1"
+            className="shrink-0 flex items-center justify-center px-0.5 sm:px-1.5"
             animate={{ scale: [1, 1.06, 1] }}
             transition={{ duration: 2.2, repeat: Infinity, ease: "easeInOut" }}
           >
             <img
               src="/images/red-sketch-heart.png"
               alt="Heart"
-              className="w-14 h-14 sm:w-16 sm:h-16 md:w-24 md:h-24 object-contain drop-shadow-[0_2px_8px_rgba(220,38,38,0.22)] select-none pointer-events-none"
+              className="w-12 h-12 sm:w-16 sm:h-16 md:w-20 md:h-20 lg:w-24 lg:h-24 object-contain drop-shadow-[0_2px_10px_rgba(220,38,38,0.25)] select-none pointer-events-none"
               loading="eager"
             />
           </motion.div>
 
-          {/* Bride (Right) */}
-          <div className="flex flex-col items-center text-center shrink-0 min-w-0">
-            <div className="font-logo text-xl sm:text-2xl md:text-3xl lg:text-4xl text-gold-gradient font-bold drop-shadow-sm whitespace-nowrap leading-relaxed">
-              {couple.bride.nameKm}
-            </div>
-            <p className="font-serifAccent text-base md:text-lg text-stone-700 font-medium italic tracking-wide whitespace-nowrap">
-              {couple.bride.nameEn}
-            </p>
-          </div>
+          <h2 className="font-logo text-3xl sm:text-4xl md:text-5xl text-gold-gradient drop-shadow-sm whitespace-nowrap leading-relaxed">
+            {couple.bride.nameKm}
+          </h2>
+        </div>
+
+        {/* Row 2: Latin names with gap matching the heart width above */}
+        <div className="w-full max-w-xl flex flex-nowrap items-center justify-between gap-4 sm:gap-8 px-2 mt-1 sm:mt-2">
+          <p 
+            className="font-serifAccent text-2xl sm:text-3xl md:text-4xl font-extrabold tracking-wide text-stone-900 italic whitespace-nowrap text-left"
+            style={{ fontSize: 'clamp(1.5rem, 4vw, 2.25rem)' }}
+          >
+            {couple.groom.nameEn}
+          </p>
+          <p 
+            className="font-serifAccent text-2xl sm:text-3xl md:text-4xl font-extrabold tracking-wide text-stone-900 italic whitespace-nowrap text-right"
+            style={{ fontSize: 'clamp(1.5rem, 4vw, 2.25rem)' }}
+          >
+            {couple.bride.nameEn}
+          </p>
         </div>
       </motion.div>
 

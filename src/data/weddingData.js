@@ -326,7 +326,7 @@ export const weddingData = {
       willAttend: "ចូលរួមយ៉ាងរីករាយ",
       cannotAttend: "អវត្តមាន (ផ្ញើតែពរជ័យ)",
       yourName: "ឈ្មោះរបស់លោកអ្នក",
-      yourNamePlaceholder: "ឧ. ឌុក ដារ៉ាពេជ្រឧត្ដម / Duk Darapichoudom",
+      yourNamePlaceholder: "ឧ. ឌុក ដារ៉ាពេជ្រឧត្ដម",
       yourWish: "សារប្រសិទ្ធពរជ័យ",
       yourWishPlaceholder: "សូមជូនពរឱ្យអ្នកទាំងពីរស្រឡាញ់គ្នាដល់ចាស់កោងខ្នង រកស៊ីមានបាន...",
       sendWish: "ផ្ញើសារជូនពរ",

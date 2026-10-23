@@ -54,17 +54,11 @@ export default function EnvelopeModal({ isOpen, onOpen, lang = 'km' }) {
               {t.weddingInvitation}
             </span>
 
-            {/* Couple names flanking big red sketch heart */}
-            <div className="flex items-center justify-center gap-2.5 sm:gap-4 md:gap-5">
-              {/* Groom (Left) */}
-              <div className="flex flex-col items-center text-center shrink-0 min-w-0">
-                <span className="font-heading text-lg sm:text-2xl md:text-3xl text-gold-gradient font-bold drop-shadow whitespace-nowrap leading-tight">
-                  {weddingData.couple.groom.nameKm}
-                </span>
-                <span className="font-serifAccent italic text-stone-700 font-medium text-base md:text-lg whitespace-nowrap mt-0.5 sm:mt-1 tracking-wide">
-                  {weddingData.couple.groom.nameEn}
-                </span>
-              </div>
+            {/* Row 1: Khmer names flanking the big heart */}
+            <div className="flex flex-nowrap items-center justify-center gap-1.5 sm:gap-3.5 md:gap-5">
+              <span className="font-heading text-3xl sm:text-4xl md:text-5xl text-gold-gradient drop-shadow whitespace-nowrap leading-tight">
+                {weddingData.couple.groom.nameKm}
+              </span>
 
               {/* Central Big Red Sketch Heart */}
               <motion.div
@@ -75,20 +69,30 @@ export default function EnvelopeModal({ isOpen, onOpen, lang = 'km' }) {
                 <img
                   src="/images/red-sketch-heart.png"
                   alt="Heart"
-                  className="w-14 h-14 sm:w-16 sm:h-16 md:w-24 md:h-24 object-contain drop-shadow-[0_2px_10px_rgba(220,38,38,0.35)] select-none pointer-events-none"
+                  className="w-12 h-12 sm:w-16 sm:h-16 md:w-20 md:h-20 lg:w-24 lg:h-24 object-contain drop-shadow-[0_2px_10px_rgba(220,38,38,0.35)] select-none pointer-events-none"
                   loading="eager"
                 />
               </motion.div>
 
-              {/* Bride (Right) */}
-              <div className="flex flex-col items-center text-center shrink-0 min-w-0">
-                <span className="font-heading text-lg sm:text-2xl md:text-3xl text-gold-gradient font-bold drop-shadow whitespace-nowrap leading-tight">
-                  {weddingData.couple.bride.nameKm}
-                </span>
-                <span className="font-serifAccent italic text-stone-700 font-medium text-base md:text-lg whitespace-nowrap mt-0.5 sm:mt-1 tracking-wide">
-                  {weddingData.couple.bride.nameEn}
-                </span>
-              </div>
+              <span className="font-heading text-3xl sm:text-4xl md:text-5xl text-gold-gradient drop-shadow whitespace-nowrap leading-tight">
+                {weddingData.couple.bride.nameKm}
+              </span>
+            </div>
+
+            {/* Row 2: Latin names with gap matching the heart width above */}
+            <div className="w-full max-w-xl flex flex-nowrap items-center justify-between gap-4 sm:gap-8 px-2 mt-1 sm:mt-2">
+              <span 
+                className="font-serifAccent text-2xl sm:text-3xl md:text-4xl font-extrabold tracking-wide text-stone-900 italic whitespace-nowrap text-left"
+                style={{ fontSize: 'clamp(1.5rem, 4vw, 2.25rem)' }}
+              >
+                {weddingData.couple.groom.nameEn}
+              </span>
+              <span 
+                className="font-serifAccent text-2xl sm:text-3xl md:text-4xl font-extrabold tracking-wide text-stone-900 italic whitespace-nowrap text-right"
+                style={{ fontSize: 'clamp(1.5rem, 4vw, 2.25rem)' }}
+              >
+                {weddingData.couple.bride.nameEn}
+              </span>
             </div>
           </motion.div>
 
